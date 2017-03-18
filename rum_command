@@ -1,0 +1,1 @@
+spark-submit --master spark://172.30.64.84:7077 --executor-memory 2G --packages org.mongodb.spark:mongo-spark-connector_2.11:2.0.0
