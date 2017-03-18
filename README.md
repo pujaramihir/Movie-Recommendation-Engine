@@ -1,2 +1,4 @@
-# Movie-Recommendation-Engine
-Recommendation engine developed in apache spark with movielens latest dataset. 
+# Movie Recommendation Engine
+Recommendation engine using Collaborative Filtering and Content based system algorithm in Apache Spark.
+Used Movielens latest dataset for the movie recommendation.
+ 
