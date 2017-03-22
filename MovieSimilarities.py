@@ -1,47 +1,33 @@
-import sys
-from pyspark import SparkConf, SparkContext
 from pyspark.sql import SparkSession
-from math import sqrt
 
-#To run on EMR successfully + output results for Star Wars:
-#aws s3 cp s3://sundog-spark/MovieSimilarities1M.py ./
-#aws s3 sp c3://sundog-spark/ml-1m/movies.dat ./
-#spark-submit --executor-memory 1g MovieSimilarities1M.py 260
+def findSimilarity((movieId,genreString)):
+    genre1 = genreString.split('|')
+    sampleData = {}
+    sampleData = getDisctionary()
+    
+    for g1 in genre1:
+        sampleData[g1] = 1
+        
+    intersactionValue = 0;
+    unionValue = 0;
+    for (a1,b1) in zip(sampleData.values(),sampleMovieData.values()):
+        if(int(a1)+int(b1) == 2):
+            intersactionValue = intersactionValue + 1
+            unionValue = unionValue + 1
+        elif(int(a1)+int(b1) == 1):
+            unionValue = unionValue + 1
+    
+    similarity = 0.00
+    similarity = float(intersactionValue)/float(unionValue)
+    return (sampleMovie[0].movieId, movieId, similarity)
+    
 
-
-def makePairs((user, ratings)):
-    (movie1, rating1) = ratings[0]
-    (movie2, rating2) = ratings[1]
-    return ((movie1, movie2), (rating1, rating2))
-
-def filterDuplicates( (userID, ratings) ):
-    (movie1, rating1) = ratings[0]
-    (movie2, rating2) = ratings[1]
-    return movie1 < movie2
-
-def computeCosineSimilarity(ratingPairs):
-    numPairs = 0
-    sum_xx = sum_yy = sum_xy = 0
-    for ratingX, ratingY in ratingPairs:
-        sum_xx += ratingX * ratingX
-        sum_yy += ratingY * ratingY
-        sum_xy += ratingX * ratingY
-        numPairs += 1
-
-    numerator = sum_xy
-    denominator = sqrt(sum_xx) * sqrt(sum_yy)
-
-    score = 0
-    if (denominator):
-        score = (numerator / (float(denominator)))
-
-    return (score, numPairs)
-
-def genresKeyValuePair(genres):
-    list = []
-    for genre in genres:
-        list.append(genre)
-    return (1,list)
+def getDisctionary():
+    similarityGenres = {}
+    for genre in genresData:
+        similarityGenres[genre.genres] = 0;        
+    
+    return similarityGenres
 
 
 spark = SparkSession \
@@ -50,9 +36,39 @@ spark = SparkSession \
     .config("spark.mongodb.output.uri", "mongodb://127.0.0.1/") \
     .getOrCreate()
 
-db = spark.read.format("com.mongodb.spark.sql.DefaultSource").option("database","movielens").option("collection", "movies").load()
+movies = spark.read.format("com.mongodb.spark.sql.DefaultSource").option("database","movielens").option("collection", "movies").load()
+genres = spark.read.format("com.mongodb.spark.sql.DefaultSource").option("database","movielens").option("collection", "genres").load()
 
-genre = db.filter(db['genres'] != "(no genres listed)").rdd.map(lambda l: l.genres).map(lambda l: l.split("|"))
+genresData = genres.collect()
+
+
+
+
+sampleMovie = movies.filter(movies["movieId"] == 122904).collect()
+sampleMovieData = getDisctionary()
+if(len(sampleMovie) > 0):
+    for i in sampleMovie[0].genres.split('|'):
+        sampleMovieData[i] = 1
+
+
+    
+
+abcd = movies.filter(movies['genres'] != "(no genres listed)").rdd.map(lambda l: (l.movieId,l.genres)).map(findSimilarity)
+
+#print sampleMovieData
+print abcd.collect()
+print "Bye" 
+
+
+#print "Hello"
+#movies.rdd.map(lambda l: (l.movieId,l.genres))
+    
+
+
+    
+"""
+genre = db.rdd.map(lambda l: l.genres).map(lambda l: l.split("|"))
+
 
 
 data = genre.collect()
@@ -70,7 +86,7 @@ distinctGenres = list(set(distinctGenres))
 print distinctGenres
 
 
-"""
+
 data = sc.textFile("s3n://sundog-spark/ml-1m/ratings.dat")
 
 # Map ratings to key / value pairs: user ID => movie ID, rating
