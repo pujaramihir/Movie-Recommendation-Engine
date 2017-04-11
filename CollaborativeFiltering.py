@@ -17,24 +17,18 @@ spark = SparkSession \
 
 movies = spark.read.format("com.mongodb.spark.sql.DefaultSource").option("database","movielens").option("collection", "movies").load()
 ratings = spark.read.format("com.mongodb.spark.sql.DefaultSource").option("database","movielens").option("collection", "ratings").load()
-"""
-partitionRatings = ratings.filter(ratings["userId"] < 10).rdd.partitionBy(40)
-print "Hello"
-print len(partitionRatings.collect())
-print "Bye"
-"""
-smallData = ratings.filter(ratings["userId"] < 10000).rdd
-ratingsData = smallData.map(lambda l: Rating(int(l.userId), int(l.movieId), float(l.rating))).persist()
+
+ratingsData = ratings.rdd.map(lambda l: Rating(int(l.userId), int(l.movieId), float(l.rating))).persist()
 
 
 #print ratingsData.collect()
 
-rank = 5
+rank = 10
 # Lowered numIterations to ensure it works on lower-end systems
-numIterations = 5
+numIterations = 10
 model = ALS.train(ratingsData, rank, numIterations)
 
-userID = 9
+userID = 260
 
 print("\nRatings for user ID " + str(userID) + ":")
 userRatings = ratingsData.filter(lambda l: l[0] == userID)
@@ -46,9 +40,5 @@ recommendations = model.recommendProducts(userID, 10)
 for recommendation in recommendations:
     print getMovieName(int(recommendation[1])) + \
         " score " + str(recommendation[2])
-
-
-
-
-
+        
 #movieMap = movies.rdd.map(lambda l: )
