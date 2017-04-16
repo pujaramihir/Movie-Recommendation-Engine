@@ -18,7 +18,7 @@ spark = SparkSession \
 movies = spark.read.format("com.mongodb.spark.sql.DefaultSource").option("database","movielens").option("collection", "movies").load()
 ratings = spark.read.format("com.mongodb.spark.sql.DefaultSource").option("database","movielens").option("collection", "ratings").load()
 
-ratingsData = ratings.rdd.map(lambda l: Rating(int(l.userId), int(l.movieId), float(l.rating))).persist()
+ratingsData = ratings.rdd.map(lambda l: Rating(int(l.userId), int(l.movieId), float(l.rating))).persist(StorageLevel.MEMORY_AND_DISK)
 
 
 #print ratingsData.collect()
