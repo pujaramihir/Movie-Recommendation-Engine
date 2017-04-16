@@ -9,23 +9,10 @@ spark = SparkSession \
     .getOrCreate()
     
     
-with open('./Dataset/ml-latest/splitratingfiles/fileaa') as f:
-    reader = csv.reader(f)
-    rows = tuple(reader)
-    
 
-"""
-list = []
-
-for row in rows:
-    a = [] 
-    a.append(int(row[0]))
-    a.append(int(row[1]))
-    a.append(float(row[2]))
-    a.append(int(row[3]))
-    list.append(a)
-"""
-
-ratings = spark.createDataFrame(rows, ["userId","movieId","rating","timestamp"])
+data = sc.textFile("./Dataset/ml-latest/ratings.csv")
+ratings = data.map(lambda l: l.split(",")).map(lambda l: (int(l[0]), int(l[1]), float(l[2])))
+ratingsPartitioned = ratings.partitionBy(24)
+ratings = spark.createDataFrame(ratingsPartitioned, ["userId","movieId","rating"])
 ratings.write.format("com.mongodb.spark.sql.DefaultSource").mode("append").option("database","movielens").option("collection", "ratings1").save()
 ratings.show()    

@@ -1,6 +1,6 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.types import IntegerType, DoubleType
-
+import numpy
 from pyspark.ml.evaluation import RegressionEvaluator
 from pyspark.ml.recommendation import ALS
 from pyspark.sql import Row
@@ -32,11 +32,12 @@ ratingschangedTypedf = ratingschangedTypedf.filter(ratingschangedTypedf['userId'
 # Note we set cold start strategy to 'drop' to ensure we don't get NaN evaluation metrics
 
 als = ALS(maxIter=10, regParam=0.01, userCol="userId", itemCol="movieId", ratingCol="rating")
-print als.explainParams()
 model = als.fit(training)
 
 # Evaluate the model by computing the RMSE on the test data
 predictions = model.transform(test)
+print predictions.filter(str(predictions['prediction']) != 'nan').rdd.collect()
+
 evaluator = RegressionEvaluator(metricName="rmse", labelCol="rating", predictionCol="prediction")
 rmse = evaluator.evaluate(predictions)
 print rmse
