@@ -73,8 +73,6 @@ for d in data:
     for d1 in d:
         distinctGenres.append(d1)
         
-        
-        
 distinctGenres = list(set(distinctGenres))
 
 print distinctGenres
